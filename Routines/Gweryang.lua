@@ -104,28 +104,34 @@ local Grammar = Transform.Grammar{
 	Transform.Jump"Parts";
 }
 
----@param Request string
-local function Parse(Request)
-	return Adapt.Process(Grammar, "Raise", Stream.String(Request))
+---@param Message string
+local function Parse(Message)
+	return Adapt.Process(Grammar, "Raise", Stream.String(Message))
 end
 
+---@alias OverlayBot.Gweryang.Request {[1]: string, [2]:Heartstrings.Mailbox}
+
 ---@param RequestBox Heartstrings.Mailbox
+---@param CachePath string
 local function Main(RequestBox, CachePath)
 	print"Gweryang starting up"
 	while true do
 		local Requests = RequestBox:Wait()
 		for _, Request in ipairs(Requests) do
-			print("Processing", Request)
+			---@cast Request OverlayBot.Gweryang.Request
+			print("Processing", Request[1])
+			local Message = Request[1] or ""
+			local ResultBox = Request[2]
 			---@cast Request string
-			local Success, Parts = Parse(Request)
+			local Success, Parts = Parse(Message)
 			if not Success or #Parts == 0 then
-				print"parse failed. TODO: inform invoker and refund their points"
+				ResultBox:Send{false, "Parse failed."}
 			end
 			print(#Parts, table.unpack(Parts))
 			local Clips = {}
 			for _, Part in ipairs(Parts) do
 				local Voice = Part:GetElement"Speaker":GetElement"Name":lower()
-				local Message = Part:GetElement"Message"
+				Message = Part:GetElement"Message"
 				local OutputPath = CachePath .."/".. tostring(#Clips + 1) ..".mp3"
 				print("Generating", Voice, Message, OutputPath)
 				Generators[Voice](Message, OutputPath)
@@ -138,6 +144,7 @@ local function Main(RequestBox, CachePath)
 				Play(Clip)
 				Erase(Clip)
 			end
+			ResultBox:Send{true}
 		end
 	end
 end; return Main

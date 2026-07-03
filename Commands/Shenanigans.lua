@@ -21,8 +21,8 @@ function Type:Initialize(Instance, Name, Parameters)
 end
 
 ---@class OverlayBot.Commands.Shenanigans.Definition
----@field Execute fun(Parameters: table<string, any>): boolean
----@field Help string
+---@field Execute fun(Parameters: table<string, any>, ResultBox: Heartstrings.Mailbox)
+---@field Description string
 ---@field CostFunction fun(Parameters: table<string, any>): integer
 ---@field Grammar userdata
 ---@field Defaults table
@@ -52,7 +52,7 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 					}
 				)
 			end;
-			Help = "Play a video. see !videolist";
+			Description = "Play a video. see !videolist";
 			CostFunction = function(Parameters)
 				return 100
 			end;
@@ -75,7 +75,7 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 					)
 				end
 			end;
-			Help = "Adds random buddies somewhere to the screen I game on for 3~7 seconds";
+			Description = "Adds random buddies somewhere to the screen I game on for 3~7 seconds";
 			CostFunction = function(Parameters)
 				return Parameters.Amount * 1
 			end;
@@ -94,7 +94,7 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				espeak:write(Parameters.Message)
 				espeak:close()
 			end;
-			Help = "cheap espeak tts. no delay. no cooldown.";
+			Description = "cheap espeak tts. no delay. no cooldown.";
 			CostFunction = function(Parameters)
 				return 1 * #Parameters.Message;
 			end;
@@ -104,9 +104,8 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 			Grammar = P.Group(P.Variable.Canonical"Trailing", "Message");
 		};]]
 		tts = {
-			Execute = function(Parameters)
-				GweryangRequestBox:Send(Parameters.Message)
-				return true
+			Execute = function(Parameters, ResultBox)
+				GweryangRequestBox:Send{Parameters.Message, ResultBox}
 			end;
 			CostFunction = function(Parameters)
 				return 10 * #Parameters.Message;
@@ -118,12 +117,12 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				Message = "[brian]I forgot my message.";
 			};
 			Grammar = P.Group(P.Variable.Canonical"Trailing", "Message");
-			Help = "custom TTS, not yet documented";
+			Description = "custom TTS, not yet documented";
 		};
 		flash = {
-			Execute = function(Parameters)
+			Execute = function(Parameters, ResultBox)
 				OverlayPortal:Send{"Flash", Parameters.Length}
-				return true
+				ResultBox:Send{true}
 			end;
 			CostFunction = function(Parameters)
 				return Parameters.Length * 100
@@ -138,12 +137,12 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				P.Variable.Canonical"Integer",
 				"Length"
 			);
-			Help = "Flashbang the streamer and viewers.";
+			Description = "Flashbang the streamer and viewers.";
 		};
 		bsod = {
-			Execute = function(Parameters)
+			Execute = function(Parameters, ResultBox)
 				OverlayPortal:Send{"BSOD", Parameters.Length}
-				return true
+				ResultBox:Send{true}
 			end;
 			CostFunction = function(Parameters)
 				return Parameters.Length * 100
@@ -158,12 +157,12 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				P.Variable.Canonical"Integer",
 				"Length"
 			);
-			Help = "Displays Windows BSOD, on a Linux machine?";
+			Description = "Displays Windows BSOD, on a Linux machine?";
 		};
 		panic = {
-			Execute = function(Parameters)
+			Execute = function(Parameters, ResultBox)
 				OverlayPortal:Send{"Panic", Parameters.Length}
-				return true
+				ResultBox:Send{true}
 			end;
 			CostFunction = function(Parameters)
 				return Parameters.Length * 100
@@ -178,12 +177,12 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				P.Variable.Canonical"Integer",
 				"Length"
 			);
-			Help = "Displays a kernel panic D:";
+			Description = "Displays a kernel panic D:";
 		};
 		xflip = {
-			Execute = function(Parameters)
+			Execute = function(Parameters, ResultBox)
 				OverlayPortal:Send{"XFlip", Parameters.Length}
-				return true
+				ResultBox:Send{true}
 			end;
 			CostFunction = function(Parameters)
 				return Parameters.Length * 100
@@ -198,12 +197,12 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				P.Variable.Canonical"Integer",
 				"Length"
 			);
-			Help = "Flips the X axis of the game";
+			Description = "Flips the X axis of the game";
 		};
 		yflip = {
-			Execute = function(Parameters)
+			Execute = function(Parameters, ResultBox)
 				OverlayPortal:Send{"YFlip", Parameters.Length}
-				return true
+				ResultBox:Send{true}
 			end;
 			CostFunction = function(Parameters)
 				return Parameters.Length * 100
@@ -218,7 +217,7 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				P.Variable.Canonical"Integer",
 				"Length"
 			);
-			Help = "Flips the Y axis";
+			Description = "Flips the Y axis";
 		};
 	}; SharedData.Shenanigans = Shenanigans; return Shenanigans
 end; return GenerateShenanigans
