@@ -19,6 +19,9 @@ local function Main(CommandPortal)
 		PanicEnd = 0;
 		XFlipEnd = 0;
 		YFlipEnd = 0;
+		WarpEnd = 0;
+		WarpSpeed = 1;
+		WarpStrength = 1;
 		RenderOverlay = true;
 		FocusedWindow = 0;
 	}

@@ -41,6 +41,13 @@ local function Main(SharedData, CommandPortal)
 				SharedData.BSODEnd = Time
 			end
 			SharedData.BSODEnd = SharedData.BSODEnd + Argument
+		elseif Command == "Warp" then
+			if SharedData.WarpEnd < Time then
+				SharedData.WarpEnd = Time
+			end
+			SharedData.WarpEnd = SharedData.WarpEnd + Argument.Length
+			SharedData.WarpSpeed = Argument.Speed
+			SharedData.WarpStrength = Argument.Strength
 		end
 	end
 end; return Main

@@ -111,7 +111,7 @@ local function Main(Shared)
 	print("Texture loading/creation took ".. Utils.GetTime() - Start .." seconds")
 	Shared.Textures = Textures.Buddies
 	
-	local RendererInstance = Renderer()
+	local RendererInstance = Renderer(1920, 1080)
 	local LastUpdate = Utils.GetTime()
 	local Event = ffi.new"XEvent[1]"
 	local GameWindowMapped = false

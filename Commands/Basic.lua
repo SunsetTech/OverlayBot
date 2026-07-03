@@ -69,7 +69,7 @@ return function(SharedData)
 			Help = "You must be the trashking to use this";
 		};
 		balance = {
-			Execute = function(Connection, Event, Parameters)
+			Execute = function(Connection, Event, _)
 				local UserID = tonumber(Event.Tags["user-id"])
 				assert(UserID)
 				local Total = SharedData.Database:GetPoints(UserID)

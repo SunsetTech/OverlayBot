@@ -39,6 +39,7 @@ local function Main(Address, AuthToken, Database, AdminID, Shenanigans)
 								Controls[Name] = {
 									Parameters = Definition.Parameters;
 									Defaults = Definition.Defaults;
+									Description = Definition.Description;
 								}
 							end
 							local Response = {

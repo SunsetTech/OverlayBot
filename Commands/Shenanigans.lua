@@ -219,5 +219,38 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 			);
 			Description = "Flips the Y axis";
 		};
+		warp = {
+			Execute = function(Parameters, ResultBox)
+				OverlayPortal:Send{
+					"Warp", {
+						Length = Parameters.Length;
+						Speed = Parameters.Speed;
+						Strength = Parameters.Strength;
+					}
+				}
+				ResultBox:Send{true}
+			end;
+			CostFunction = function(Parameters)
+				return Parameters.Length * Parameters.Speed * Parameters.Strength * 100
+			end;
+			Parameters = {
+				Length = Type("integer", {Minimum=1});
+				Speed = Type("integer", {Minimum=1});
+				Strength = Type("integer", {Minimum=1});
+			};
+			Defaults = {
+				Length = 1;
+				Speed = 1;
+				Strength = 1;
+			};
+			Grammar = P.Sequence{
+				P.Group(P.Variable.Canonical"Integer", "Length");
+				P.Atleast(1, P.Pattern" ");
+				P.Group(P.Variable.Canonical"Integer", "Speed");
+				P.Atleast(1, P.Pattern" ");
+				P.Group(P.Variable.Canonical"Integer", "Strength");
+			};
+			Description = "Warps the screen";
+		};
 	}; SharedData.Shenanigans = Shenanigans; return Shenanigans
 end; return GenerateShenanigans

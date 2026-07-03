@@ -120,5 +120,21 @@ local Assets; Assets = {
 		local FragmentShaderHandle = Rendering.Utils.CompileShader(GL.Lib.GL_FRAGMENT_SHADER,{FragmentShaderSource})
 
 		return Rendering.Utils.LinkProgram{VertexShaderHandle, FragmentShaderHandle}
+	end;
+	
+	LoadWarpShaderProgram = function()
+		local VertexShaderFile = io.open(Roses.Directory.System.Data"OverlayBot" .."/Shaders/Projection.v.glsl", "r")
+		assert(VertexShaderFile)
+		local VertexShaderSource = VertexShaderFile:read"a"
+		VertexShaderFile:close()
+		local VertexShaderHandle = Rendering.Utils.CompileShader(GL.Lib.GL_VERTEX_SHADER,{VertexShaderSource})
+
+		local FragmentShaderFile = io.open(Roses.Directory.System.Data"OverlayBot" .."/Shaders/Warp.f.glsl", "r")
+		assert(FragmentShaderFile)
+		local FragmentShaderSource = FragmentShaderFile:read"a"
+		FragmentShaderFile:close()
+		local FragmentShaderHandle = Rendering.Utils.CompileShader(GL.Lib.GL_FRAGMENT_SHADER,{FragmentShaderSource})
+
+		return Rendering.Utils.LinkProgram{VertexShaderHandle, FragmentShaderHandle}
 	end
 }; return Assets

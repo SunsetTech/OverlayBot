@@ -88,7 +88,17 @@ local Utils; Utils = {
 		
 		return Handle
 	end;
-
+	
+	---@class OverlayBot.Rendering.Utils.Texture
+	---@field Handle integer
+	---@field Width integer
+	---@field Height integer
+	
+	---@param Data unknown
+	---@param Width integer
+	---@param Height integer
+	---@param BitDepth 16 | 8 | nil
+	---@return OverlayBot.Rendering.Utils.Texture
 	CreateTexture = function(Data, Width, Height, BitDepth)
 		local Texture = ffi.new"GLuint[1]"
 		GL.API.GenTextures(1, Texture)
@@ -102,6 +112,30 @@ local Utils; Utils = {
 			Handle = Handle;
 			Width = Width;
 			Height = Height;
+		}
+	end;
+	
+	---@class OverlayBot.Rendering.Utils.RenderTarget
+	---@field Handle integer
+	---@field Texture OverlayBot.Rendering.Utils.Texture
+
+	---@param Width integer
+	---@param Height integer
+	---@param BitDepth 8 | 16 | nil
+	---@return OverlayBot.Rendering.Utils.RenderTarget
+	CreateRenderTarget = function(Width, Height, BitDepth)
+		local Framebuffer = ffi.new"GLuint[1]"
+		GL.API.GenFramebuffers(1, Framebuffer)
+		local Handle = Framebuffer[0]
+		GL.API.BindFramebuffer(GL.Lib.GL_FRAMEBUFFER, Handle)
+		local Texture = Utils.CreateTexture(nil, Width, Height, BitDepth)
+		GL.API.FramebufferTexture(GL.Lib.GL_FRAMEBUFFER, GL.Lib.GL_COLOR_ATTACHMENT0, Texture.Handle, 0)
+		local DrawBuffers = ffi.new("GLenum[1]", {GL.Lib.GL_COLOR_ATTACHMENT0})
+		GL.API.NamedFramebufferDrawBuffers(Handle, 1, DrawBuffers)
+		GL.API.BindFramebuffer(GL.Lib.GL_FRAMEBUFFER, 0)
+		return {
+			Handle = Handle;
+			Texture = Texture;
 		}
 	end;
 }; return Utils;
