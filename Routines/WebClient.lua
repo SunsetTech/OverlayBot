@@ -55,6 +55,19 @@ local function Main(Address, AuthToken, Database, AdminID, Shenanigans)
 								ConnectionID = Frame.ConnectionID;
 							}
 							Client:send(dkjson.encode(Response))
+						elseif Frame.Type == "Cost" then
+							local Shenanigan = Shenanigans[Frame.Command]
+							local RequiredPoints = 0
+							--if (Frame.TwitchID ~= AdminID) then
+								RequiredPoints = Shenanigan.CostFunction(Frame.Parameters)
+							--end
+							local CostMessage = {
+								Type = "Cost";
+								ConnectionID = Frame.ConnectionID;
+								Command = Frame.Command;
+								Cost = RequiredPoints;
+							}
+							Client:send(dkjson.encode(CostMessage))
 						elseif Frame.Type == "Activate" then
 							local Shenanigan = Shenanigans[Frame.Command]
 							local RequiredPoints = 0
