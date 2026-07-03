@@ -126,25 +126,26 @@ local function Main(RequestBox, CachePath)
 			local Success, Parts = Parse(Message)
 			if not Success or #Parts == 0 then
 				ResultBox:Send{false, "Parse failed."}
+			else
+				ResultBox:Send{true}
+				print(#Parts, table.unpack(Parts))
+				local Clips = {}
+				for _, Part in ipairs(Parts) do
+					local Voice = Part:GetElement"Speaker":GetElement"Name":lower()
+					Message = Part:GetElement"Message"
+					local OutputPath = CachePath .."/".. tostring(#Clips + 1) ..".mp3"
+					print("Generating", Voice, Message, OutputPath)
+					Generators[Voice](Message, OutputPath)
+					local NormalizedPath = OutputPath ..".normalized.mp3"
+					Normalize(OutputPath, NormalizedPath)
+					Erase(OutputPath)
+					table.insert(Clips, NormalizedPath)
+				end
+				for _, Clip in pairs(Clips) do
+					Play(Clip)
+					Erase(Clip)
+				end
 			end
-			print(#Parts, table.unpack(Parts))
-			local Clips = {}
-			for _, Part in ipairs(Parts) do
-				local Voice = Part:GetElement"Speaker":GetElement"Name":lower()
-				Message = Part:GetElement"Message"
-				local OutputPath = CachePath .."/".. tostring(#Clips + 1) ..".mp3"
-				print("Generating", Voice, Message, OutputPath)
-				Generators[Voice](Message, OutputPath)
-				local NormalizedPath = OutputPath ..".normalized.mp3"
-				Normalize(OutputPath, NormalizedPath)
-				Erase(OutputPath)
-				table.insert(Clips, NormalizedPath)
-			end
-			for _, Clip in pairs(Clips) do
-				Play(Clip)
-				Erase(Clip)
-			end
-			ResultBox:Send{true}
 		end
 	end
 end; return Main

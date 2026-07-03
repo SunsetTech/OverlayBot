@@ -47,6 +47,14 @@ local function Main(Address, AuthToken, Database, AdminID, Shenanigans)
 							}
 							Response = dkjson.encode(Response)
 							Client:send(Response)
+						elseif Frame.Type == "Balance" then
+							local Total = Database:GetPoints(Frame.TwitchID)
+							local Response = {
+								Type = "Balance";
+								Balance = Total;
+								ConnectionID = Frame.ConnectionID;
+							}
+							Client:send(dkjson.encode(Response))
 						elseif Frame.Type == "Activate" then
 							local Shenanigan = Shenanigans[Frame.Command]
 							local RequiredPoints = 0
@@ -69,7 +77,7 @@ local function Main(Address, AuthToken, Database, AdminID, Shenanigans)
 							Controller:wrap(
 								function()
 									local Result = ResultBox:Wait()[1]
-									local Success, Error = Result[1], Result[2]
+									Success, Error = Result[1], Result[2]
 									if not Success then
 										local RejectedMessage = {
 											Type = "Rejected";
@@ -84,6 +92,7 @@ local function Main(Address, AuthToken, Database, AdminID, Shenanigans)
 											Type = "Activated";
 											ConnectionID = Frame.ConnectionID;
 											RequestID = Frame.RequestID;
+											Balance = Database:GetPoints(Frame.TwitchID);
 										}
 										Client:send(dkjson.encode(ActivatedMessage))
 									end
