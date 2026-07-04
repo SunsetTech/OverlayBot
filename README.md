@@ -35,3 +35,6 @@ ensuring the captured window is always one that belongs to the target applicatio
 Personal project, active development. 
 Some dependencies are not included in this repository. 
 Not packaged for general use.
+
+## Media
+![Screenshot](Assets/Screenshot.png)
