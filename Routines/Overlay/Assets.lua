@@ -29,14 +29,24 @@ local Assets; Assets = {
 			HammerToss = {};
 			Overlays = {};
 			Buddies = {};
+			Bayer = {};
 		}
-		
+		print"loading Cursor.png"
+		Textures.Cursor = AssetImporters.LoadPNG"Cursor.png"
+		print"loading BayerMatrices/16.png"
+		Textures.Bayer[16] = AssetImporters.LoadPNG(
+			"BayerMatrices/16.png", nil, {
+				Min = GL.Lib.GL_NEAREST;
+				Mag = GL.Lib.GL_NEAREST;
+			}
+		)
+		assert(Textures.Bayer[16])
 		print"loading Hammer.png"
 		Textures.HammerToss.Hammer = AssetImporters.LoadPNG"HammerToss/Hammer.png"
 		print"loading Crack.png"
 		Textures.HammerToss.Crack = AssetImporters.LoadPNG"HammerToss/Crack.png"
-		print"loading Panic.Png"
-		Textures.Overlays.Panic, PanicTextureError = AssetImporters.LoadPNG"Overlays/Panic.png"
+		print"loading Panic.png"
+		Textures.Overlays.Panic = AssetImporters.LoadPNG"Overlays/Panic.png"
 		print"loading BSOD.webp"
 		local BSODImage = AssetImporters.WebP"Overlays/BSOD.webp"
 		Textures.Overlays.BSOD = Rendering.Utils.CreateTexture(BSODImage.Data, BSODImage.Width, BSODImage.Height, 8)
@@ -106,14 +116,14 @@ local Assets; Assets = {
 		}
 	end;
 	
-	LoadDefaultShaderProgram = function()
-		local VertexShaderFile = io.open(Roses.Directory.System.Data"OverlayBot" .."/Shaders/Projection.v.glsl", "r")
+	LoadShaderProgram = function(VertexShaderName, FragmentShaderName)
+		local VertexShaderFile = io.open(Roses.Directory.System.Data"OverlayBot" .."/Shaders/".. VertexShaderName ..".v.glsl", "r")
 		assert(VertexShaderFile)
 		local VertexShaderSource = VertexShaderFile:read"a"
 		VertexShaderFile:close()
 		local VertexShaderHandle = Rendering.Utils.CompileShader(GL.Lib.GL_VERTEX_SHADER,{VertexShaderSource})
 
-		local FragmentShaderFile = io.open(Roses.Directory.System.Data"OverlayBot" .."/Shaders/BasicShading.f.glsl", "r")
+		local FragmentShaderFile = io.open(Roses.Directory.System.Data"OverlayBot" .."/Shaders/".. FragmentShaderName ..".f.glsl", "r")
 		assert(FragmentShaderFile)
 		local FragmentShaderSource = FragmentShaderFile:read"a"
 		FragmentShaderFile:close()
@@ -122,19 +132,20 @@ local Assets; Assets = {
 		return Rendering.Utils.LinkProgram{VertexShaderHandle, FragmentShaderHandle}
 	end;
 	
+	LoadDefaultShaderProgram = function()
+		return Assets.LoadShaderProgram("Projection", "BasicShading")
+	end;
+	
 	LoadWarpShaderProgram = function()
-		local VertexShaderFile = io.open(Roses.Directory.System.Data"OverlayBot" .."/Shaders/Projection.v.glsl", "r")
-		assert(VertexShaderFile)
-		local VertexShaderSource = VertexShaderFile:read"a"
-		VertexShaderFile:close()
-		local VertexShaderHandle = Rendering.Utils.CompileShader(GL.Lib.GL_VERTEX_SHADER,{VertexShaderSource})
-
-		local FragmentShaderFile = io.open(Roses.Directory.System.Data"OverlayBot" .."/Shaders/Warp.f.glsl", "r")
-		assert(FragmentShaderFile)
-		local FragmentShaderSource = FragmentShaderFile:read"a"
-		FragmentShaderFile:close()
-		local FragmentShaderHandle = Rendering.Utils.CompileShader(GL.Lib.GL_FRAGMENT_SHADER,{FragmentShaderSource})
-
-		return Rendering.Utils.LinkProgram{VertexShaderHandle, FragmentShaderHandle}
-	end
+		return Assets.LoadShaderProgram("Projection", "Warp")
+	end;
+	
+	LoadGrayscaleShaderProgram = function()
+		return Assets.LoadShaderProgram("Projection", "Grayscale")
+	end;
+	
+	LoadBayerShaderProgram = function()
+		return Assets.LoadShaderProgram("Projection", "Bayer")
+	end;
+	
 }; return Assets

@@ -48,6 +48,17 @@ local function Main(SharedData, CommandPortal)
 			SharedData.WarpEnd = SharedData.WarpEnd + Argument.Length
 			SharedData.WarpSpeed = Argument.Speed
 			SharedData.WarpStrength = Argument.Strength
+			SharedData.WarpOctaves = Argument.Octaves
+		elseif Command == "Gray" then
+			if SharedData.GrayEnd < Time then
+				SharedData.GrayEnd = Time
+			end
+			SharedData.GrayEnd = SharedData.GrayEnd + Argument
+		elseif Command == "Dither" then
+			if SharedData.DitherEnd < Time then
+				SharedData.DitherEnd = Time
+			end
+			SharedData.DitherEnd = SharedData.DitherEnd + Argument
 		end
 	end
 end; return Main

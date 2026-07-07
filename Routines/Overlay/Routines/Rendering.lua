@@ -21,6 +21,20 @@ local NDI = require"OverlayBot.Routines.Overlay.NDI"
 local Window = require"OverlayBot.Routines.Overlay.Window"
 local Renderer = require"OverlayBot.Routines.Overlay.Renderer"
 
+local function GetMousePosition(Display, Root)
+	local RootReturn = ffi.new"Window[1]"
+	local ChildReturn = ffi.new"Window[1]"
+	local RootX = ffi.new"int32_t[1]"
+	local RootY = ffi.new"int32_t[1]"
+	local WindowX = ffi.new"int32_t[1]"
+	local WindowY = ffi.new"int32_t[1]"
+	local MaskReturn = ffi.new"uint32_t[1]"
+	if X11.XQueryPointer(Display, Root, RootReturn, ChildReturn, RootX, RootY, WindowX, WindowY, MaskReturn) == 1 then
+		return true, RootX[0], RootY[0]
+	end
+	return false, 0, 0
+end
+
 ---@param Shared OverlayBot.Routines.Overlay.Shared
 local function Main(Shared)
 	print"Initializing NDI library"
@@ -82,6 +96,7 @@ local function Main(Shared)
 	local XRegion = Xfixes.XFixesCreateRegion(Display, 0, 0)
 	Xfixes.XFixesSetWindowShapeRegion(Display, XWindow, Xfixes.ShapeBounding, 0, 0, 0)
 	Xfixes.XFixesSetWindowShapeRegion(Display, XWindow, Xfixes.ShapeInput, 0, 0, XRegion)
+	
 	Xfixes.XFixesDestroyRegion(Display, XRegion)
 	X11.XMapWindow(Display, XWindow)
 
@@ -117,6 +132,7 @@ local function Main(Shared)
 	local GameWindowMapped = false
 	local GameSurface
 	local GameWindow
+	local CursorHidden = false
 	while true do
 		local CurrentTime = Utils.GetTime()
 		local Delta = CurrentTime - LastUpdate
@@ -173,7 +189,15 @@ local function Main(Shared)
 			X11.XTranslateCoordinates(Display, GameWindow, Root, 0, 0, PtrX, PtrY, Child)
 			X, Y = PtrX[0], PtrY[0]
 		end
-		RendererInstance:DrawOverlay(Shared, GameWindowMapped, X, Y, Textures, Synchronizer)
+		local _, MouseX, MouseY = GetMousePosition(Display, Root)
+		if (MouseX > 1920) and CursorHidden then
+			CursorHidden = false
+			Xfixes.XFixesShowCursor(Display, XWindow)
+		elseif (MouseX <= 1920) and (not CursorHidden) then
+			CursorHidden = true
+			Xfixes.XFixesHideCursor(Display, XWindow)
+		end
+		RendererInstance:DrawOverlay(Shared, GameWindowMapped, X, Y, MouseX, 1080-MouseY, Textures, Synchronizer)
 		GL.Lib.glXSwapBuffers(Display, GLWindow)
 		cqueues.sleep(0)
 	end

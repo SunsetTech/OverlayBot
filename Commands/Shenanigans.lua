@@ -125,7 +125,7 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				ResultBox:Send{true}
 			end;
 			CostFunction = function(Parameters)
-				return Parameters.Length * 100
+				return Parameters.Length ^ 2 * 100
 			end;
 			Parameters = {
 				Length = Type("integer",{Minimum=1});
@@ -145,7 +145,7 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				ResultBox:Send{true}
 			end;
 			CostFunction = function(Parameters)
-				return Parameters.Length * 100
+				return Parameters.Length ^ 2 * 100
 			end;
 			Parameters = {
 				Length = Type("integer", {Minimum = 1})
@@ -165,7 +165,7 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				ResultBox:Send{true}
 			end;
 			CostFunction = function(Parameters)
-				return Parameters.Length * 100
+				return Parameters.Length ^ 2 * 100
 			end;
 			Parameters = {
 				Length = Type("integer", {Minimum = 1});
@@ -185,7 +185,7 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				ResultBox:Send{true}
 			end;
 			CostFunction = function(Parameters)
-				return Parameters.Length * 100
+				return Parameters.Length ^ 2 * 100
 			end;
 			Parameters = {
 				Length = Type("integer", {Minimum = 1});
@@ -205,7 +205,7 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				ResultBox:Send{true}
 			end;
 			CostFunction = function(Parameters)
-				return Parameters.Length * 100
+				return Parameters.Length ^ 2 * 100
 			end;
 			Parameters = {
 				Length = Type("integer", {Minimum = 1});
@@ -219,6 +219,46 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 			);
 			Description = "Flips the Y axis";
 		};
+		gray = {
+			Execute = function(Parameters, ResultBox)
+				OverlayPortal:Send{"Gray", Parameters.Length}
+				ResultBox:Send{true}
+			end;
+			CostFunction = function(Parameters)
+				return math.floor(Parameters.Length ^ 1.5 * 100)
+			end;
+			Parameters = {
+				Length = Type("integer", {Minimum = 1});
+			};
+			Defaults = {
+				Length = 1;
+			};
+			Grammar = P.Group(
+				P.Variable.Canonical"Integer",
+				"Length"
+			);
+			Description = "Converts the screen to grayscale";
+		};
+		dither = {
+			Execute = function(Parameters, ResultBox)
+				OverlayPortal:Send{"Dither", Parameters.Length}
+				ResultBox:Send{true}
+			end;
+			CostFunction = function(Parameters)
+				return math.floor(Parameters.Length ^ 1.5 * 100)
+			end;
+			Parameters = {
+				Length = Type("integer", {Minimum = 1});
+			};
+			Defaults = {
+				Length = 1;
+			};
+			Grammar = P.Group(
+				P.Variable.Canonical"Integer",
+				"Length"
+			);
+			Description = "Add grayscale dithering to the screen";
+		};
 		warp = {
 			Execute = function(Parameters, ResultBox)
 				OverlayPortal:Send{
@@ -226,22 +266,25 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 						Length = Parameters.Length;
 						Speed = Parameters.Speed;
 						Strength = Parameters.Strength;
+						Octaves = Parameters.Octaves;
 					}
 				}
 				ResultBox:Send{true}
 			end;
 			CostFunction = function(Parameters)
-				return Parameters.Length * Parameters.Speed * Parameters.Strength * 100
+				return Parameters.Length * Parameters.Speed * Parameters.Strength * Parameters.Octaves * 100
 			end;
 			Parameters = {
 				Length = Type("integer", {Minimum=1});
 				Speed = Type("integer", {Minimum=1});
 				Strength = Type("integer", {Minimum=1});
+				Octaves = Type("integer", {Minimum=1, Maximum=1});
 			};
 			Defaults = {
-				Length = 1;
-				Speed = 1;
-				Strength = 1;
+				Length = 5;
+				Speed = 5;
+				Strength = 5;
+				Octaves = 4;
 			};
 			Grammar = P.Sequence{
 				P.Group(P.Variable.Canonical"Integer", "Length");
@@ -249,6 +292,8 @@ local function GenerateShenanigans(SharedData, GweryangRequestBox, OverlayPortal
 				P.Group(P.Variable.Canonical"Integer", "Speed");
 				P.Atleast(1, P.Pattern" ");
 				P.Group(P.Variable.Canonical"Integer", "Strength");
+				P.Atleast(1, P.Pattern" ");
+				P.Group(P.Variable.Canonical"Integer", "Octaves");
 			};
 			Description = "Warps the screen";
 		};

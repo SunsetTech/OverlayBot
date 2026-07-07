@@ -98,15 +98,21 @@ local Utils; Utils = {
 	---@param Width integer
 	---@param Height integer
 	---@param BitDepth 16 | 8 | nil
+	---@param Wrap {S: integer?, T: integer?}?
+	---@param Filter {Min: integer?, Mag: integer?}?
 	---@return OverlayBot.Rendering.Utils.Texture
-	CreateTexture = function(Data, Width, Height, BitDepth)
+	CreateTexture = function(Data, Width, Height, BitDepth, Wrap, Filter)
+		Wrap = Wrap or {}
+		Filter = Filter or {}
 		local Texture = ffi.new"GLuint[1]"
 		GL.API.GenTextures(1, Texture)
 		local Handle = Texture[0]
 		GL.API.BindTexture(GL.Lib.GL_TEXTURE_2D, Handle)
 		GL.API.TexImage2D(GL.Lib.GL_TEXTURE_2D, 0, GL.Lib.GL_RGBA, Width, Height, 0, GL.Lib.GL_RGBA, BitDepth == 16 and GL.Lib.GL_UNSIGNED_SHORT or GL.Lib.GL_UNSIGNED_BYTE, Data)
-		GL.API.TexParameteri(GL.Lib.GL_TEXTURE_2D, GL.Lib.GL_TEXTURE_MIN_FILTER, GL.Lib.GL_LINEAR)
-		GL.API.TexParameteri(GL.Lib.GL_TEXTURE_2D, GL.Lib.GL_TEXTURE_MAG_FILTER, GL.Lib.GL_LINEAR)
+		GL.API.TexParameteri(GL.Lib.GL_TEXTURE_2D, GL.Lib.GL_TEXTURE_MIN_FILTER, Filter.Min or GL.Lib.GL_LINEAR)
+		GL.API.TexParameteri(GL.Lib.GL_TEXTURE_2D, GL.Lib.GL_TEXTURE_MAG_FILTER, Filter.Mag or GL.Lib.GL_LINEAR)
+		GL.API.TexParameteri(GL.Lib.GL_TEXTURE_2D, GL.Lib.GL_TEXTURE_WRAP_S, Wrap.S or GL.Lib.GL_REPEAT)
+		GL.API.TexParameteri(GL.Lib.GL_TEXTURE_2D, GL.Lib.GL_TEXTURE_WRAP_T, Wrap.T or GL.Lib.GL_REPEAT)
 		GL.API.BindTexture(GL.Lib.GL_TEXTURE_2D, 0)
 		return {
 			Handle = Handle;
@@ -122,13 +128,14 @@ local Utils; Utils = {
 	---@param Width integer
 	---@param Height integer
 	---@param BitDepth 8 | 16 | nil
+	---@param Wrap {S: integer?, T: integer?}?
 	---@return OverlayBot.Rendering.Utils.RenderTarget
-	CreateRenderTarget = function(Width, Height, BitDepth)
+	CreateRenderTarget = function(Width, Height, BitDepth, Wrap)
 		local Framebuffer = ffi.new"GLuint[1]"
 		GL.API.GenFramebuffers(1, Framebuffer)
 		local Handle = Framebuffer[0]
 		GL.API.BindFramebuffer(GL.Lib.GL_FRAMEBUFFER, Handle)
-		local Texture = Utils.CreateTexture(nil, Width, Height, BitDepth)
+		local Texture = Utils.CreateTexture(nil, Width, Height, BitDepth, Wrap)
 		GL.API.FramebufferTexture(GL.Lib.GL_FRAMEBUFFER, GL.Lib.GL_COLOR_ATTACHMENT0, Texture.Handle, 0)
 		local DrawBuffers = ffi.new("GLenum[1]", {GL.Lib.GL_COLOR_ATTACHMENT0})
 		GL.API.NamedFramebufferDrawBuffers(Handle, 1, DrawBuffers)

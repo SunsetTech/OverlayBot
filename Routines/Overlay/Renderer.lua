@@ -18,6 +18,8 @@ local OOP = require"Moonrise.OOP"
 ---@field QuadVAO integer
 ---@field ProgramHandle integer
 ---@field WarpProgramHandle integer
+---@field GrayscaleProgramHandle integer
+---@field BayerProgramHandle integer
 ---@field TransformationMatrixLocation integer
 ---@field TextureLocation integer
 ---@field PerspectiveMatrix OverlayBot.Math.cglm.Matrix4
@@ -39,9 +41,13 @@ function Renderer:Initialize(Instance, Width, Height, BitDepth)
 	Instance.Height = Height
 	Instance.BitDepth = BitDepth
 	
+	local RenderTargetWrapSettings = {
+		S = GL.Lib.GL_CLAMP_TO_EDGE;
+		T = GL.Lib.GL_CLAMP_TO_EDGE;
+	}
 	Instance.RenderTargets = {
-		Front = Rendering.Utils.CreateRenderTarget(Instance.Width, Instance.Height, Instance.BitDepth);
-		Back = Rendering.Utils.CreateRenderTarget(Instance.Width, Instance.Height, Instance.BitDepth);
+		Front = Rendering.Utils.CreateRenderTarget(Instance.Width, Instance.Height, Instance.BitDepth, RenderTargetWrapSettings);
+		Back = Rendering.Utils.CreateRenderTarget(Instance.Width, Instance.Height, Instance.BitDepth, RenderTargetWrapSettings);
 	}
 	
 	Instance.QuadVAO = Assets.CreateQuad()
@@ -52,6 +58,8 @@ function Renderer:Initialize(Instance, Width, Height, BitDepth)
 	GL.API.BindFragDataLocation(Instance.ProgramHandle, 0, "FragmentColor")
 	
 	Instance.WarpProgramHandle = Assets.LoadWarpShaderProgram()
+	Instance.GrayscaleProgramHandle = Assets.LoadGrayscaleShaderProgram()
+	Instance.BayerProgramHandle = Assets.LoadBayerShaderProgram()
 	
 	Instance.cglm = cglmPool()
 	local PerspectiveMatrix = Instance.cglm:Obtain"Matrix4"
@@ -106,7 +114,7 @@ function Renderer:DrawImageToScreen(Texture, X, Y, ScaleX, ScaleY, Locations)
 	GL.API.DrawArrays(GL.Lib.GL_TRIANGLES, 0, 6)
 end
 
-function Renderer:DrawOverlay(SharedData, GameWindowMapped, X, Y, Textures, Synchronizer)
+function Renderer:DrawOverlay(SharedData, GameWindowMapped, X, Y, MouseX, MouseY, Textures, Synchronizer)
 	if SharedData.RenderOverlay then
 		self.CameraTransform:InvertInto(self.InverseCameraTransform)
 		GL.API.UseProgram(self.ProgramHandle)
@@ -121,7 +129,9 @@ function Renderer:DrawOverlay(SharedData, GameWindowMapped, X, Y, Textures, Sync
 			)
 		end
 		NDI.ReceiveFrameAndUpdateTexture(Synchronizer, Textures.NDISource)
+		GL.API.BlendFunc(GL.Lib.GL_ONE, GL.Lib.GL_ONE_MINUS_SRC_ALPHA)
 		self:DrawImageToScreen(Textures.NDISource, self.Width/2, self.Height/2)
+		GL.API.BlendFunc(GL.Lib.GL_SRC_ALPHA, GL.Lib.GL_ONE_MINUS_SRC_ALPHA)
 		if SharedData.FlashEnd >= Utils.GetTime() then
 			GL.API.ClearColor(1,1,1,1)
 			GL.API.Clear(GL.Lib.GL_COLOR_BUFFER_BIT)
@@ -141,11 +151,13 @@ function Renderer:DrawOverlay(SharedData, GameWindowMapped, X, Y, Textures, Sync
 				self:DrawImageToScreen(BuddyInfo.Texture, BuddyInfo.X, BuddyInfo.Y)
 			end
 		end
+		self:DrawImageToScreen(Textures.Cursor, MouseX + Textures.Cursor.Width/2, MouseY - Textures.Cursor.Height/2)
 		if SharedData.WarpEnd >= Utils.GetTime() then
 			self.RenderTargets.Front, self.RenderTargets.Back = self.RenderTargets.Back, self.RenderTargets.Front
 			GL.API.UseProgram(self.WarpProgramHandle)
 			GL.API.Uniform1f(GL.API.GetUniformLocation(self.WarpProgramHandle, "Time"), (Utils.GetTime() - self.StartTime) * SharedData.WarpSpeed)
 			GL.API.Uniform1f(GL.API.GetUniformLocation(self.WarpProgramHandle, "Strength"), SharedData.WarpStrength / 100)
+			GL.API.Uniform1i(GL.API.GetUniformLocation(self.WarpProgramHandle, "Octaves"), SharedData.WarpOctaves)
 			GL.API.BindFramebuffer(GL.Lib.GL_FRAMEBUFFER, self.RenderTargets.Front.Handle)
 			GL.API.ClearColor(0.0, 0.0, 0.0, 0.0); 
 			GL.API.Clear(GL.Lib.GL_COLOR_BUFFER_BIT)
@@ -157,6 +169,42 @@ function Renderer:DrawOverlay(SharedData, GameWindowMapped, X, Y, Textures, Sync
 				{
 					Texture = GL.API.GetUniformLocation(self.WarpProgramHandle, "Texture");
 					TransformationMatrix = GL.API.GetUniformLocation(self.WarpProgramHandle, "TransformationMatrix");
+				}
+			)
+		end
+		if SharedData.GrayEnd >= Utils.GetTime() then
+			self.RenderTargets.Front, self.RenderTargets.Back = self.RenderTargets.Back, self.RenderTargets.Front
+			GL.API.UseProgram(self.GrayscaleProgramHandle)
+			GL.API.BindFramebuffer(GL.Lib.GL_FRAMEBUFFER, self.RenderTargets.Front.Handle)
+			GL.API.ClearColor(0.0, 0.0, 0.0, 0.0); 
+			GL.API.Clear(GL.Lib.GL_COLOR_BUFFER_BIT)
+			GL.API.Clear(GL.Lib.GL_DEPTH_BUFFER_BIT)
+			self:DrawImageToScreen(
+				self.RenderTargets.Back.Texture, 
+				self.Width/2, self.Height/2, 
+				1, -1,
+				{
+					Texture = GL.API.GetUniformLocation(self.GrayscaleProgramHandle, "Texture");
+					TransformationMatrix = GL.API.GetUniformLocation(self.GrayscaleProgramHandle, "TransformationMatrix");
+				}
+			)
+		end
+		if SharedData.DitherEnd >= Utils.GetTime() then
+			self.RenderTargets.Front, self.RenderTargets.Back = self.RenderTargets.Back, self.RenderTargets.Front
+			GL.API.UseProgram(self.BayerProgramHandle)
+			GL.API.BindFramebuffer(GL.Lib.GL_FRAMEBUFFER, self.RenderTargets.Front.Handle)
+			GL.API.ClearColor(0, 0, 0, 0)
+			GL.API.Clear(GL.Lib.GL_COLOR_BUFFER_BIT)
+			GL.API.Clear(GL.Lib.GL_DEPTH_BUFFER_BIT)
+			GL.API.BindTextureUnit(1, Textures.Bayer[16].Handle)
+			GL.API.Uniform1i(GL.API.GetUniformLocation(self.BayerProgramHandle, "ThresholdTexture"), 1)
+			self:DrawImageToScreen(
+				self.RenderTargets.Back.Texture,
+				self.Width/2, self.Height/2,
+				1, -1,
+				{
+					Texture = GL.API.GetUniformLocation(self.BayerProgramHandle, "InputTexture");
+					TransformationMatrix = GL.API.GetUniformLocation(self.BayerProgramHandle, "TransformationMatrix");
 				}
 			)
 		end

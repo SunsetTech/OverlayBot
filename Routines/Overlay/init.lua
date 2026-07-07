@@ -22,6 +22,9 @@ local function Main(CommandPortal)
 		WarpEnd = 0;
 		WarpSpeed = 1;
 		WarpStrength = 1;
+		WarpOctaves = 1;
+		GrayEnd = 0;
+		DitherEnd = 0;
 		RenderOverlay = true;
 		FocusedWindow = 0;
 	}
